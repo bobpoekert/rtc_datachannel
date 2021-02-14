@@ -1,0 +1,13 @@
+opam-version: "2.0"
+name: "rtc_datachannel_generic"
+license: "MIT"
+synopsis: "platform-independent code for webrtc datachannels"
+
+depends: [
+	"ocaml" {>= "4.5.0"}
+	"dune" {>= "1.11"}
+]
+
+build: [
+  ["dune" "build" "-p" name "-j" jobs]
+]

@@ -7,6 +7,9 @@ description: "Meta-package for JS and unix implementations of webrtc datachannel
 depends: [
 	"ocaml" {>= "4.5.0"}
 	"dune" {>= "1.11"}
+	"js_of_ocaml" {>= "3.0"}
+	"js_of_ocaml-lwt"
+	"js_of_ocaml-ppx"
 	"lwt"
 ]
 

@@ -1,5 +1,5 @@
 (library
     (name rtc_datachannel)
     (public_name rtc_datachannel)
-    (libraries lwt)
+    (libraries lwt rtc_datachannel_generic)
     (virtual_modules rtc_datachannel))

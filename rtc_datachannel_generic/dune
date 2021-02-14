@@ -1,0 +1,3 @@
+(library
+    (public_name rtc_datachannel_generic)
+    (name rtc_datachannel_generic))

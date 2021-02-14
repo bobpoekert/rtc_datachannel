@@ -1,4 +1,4 @@
 (library
     (name rtc_datachannel_unix)
-    (libraries lwt)
+    (libraries lwt rtc_datachannel_generic)
     (implements rtc_datachannel))
