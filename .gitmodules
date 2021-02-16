@@ -1,0 +1,3 @@
+[submodule "rtc_datachannel_unix/libdatachannel"]
+	path = rtc_datachannel_unix/libdatachannel
+	url = https://github.com/paullouisageneau/libdatachannel.git

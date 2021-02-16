@@ -20,11 +20,6 @@ module PeerConnection = struct
 
     type t = Webrtc._RTCPeerConnection Js.t
 
-    let create cfg = 
-		let pc = Js.Unsafe.global##.RTCPeerConnection in
-        let res = new%js pc (rtc_configuration_to_js cfg) in 
-        Lwt.return res
-
 
     let close (v : t) = 
         v##close
@@ -49,6 +44,20 @@ module PeerConnection = struct
 				Js._false);
         stream
 
+    let create cfg = 
+		let pc = Js.Unsafe.global##.RTCPeerConnection in
+        let res = new%js pc (rtc_configuration_to_js cfg) in
+		let o, i = Lwt.wait () in 
+		Lwt_stream.iter (fun state -> 
+			match state with 
+			| New -> ()
+			| Connecting -> ()
+			| Connected -> Lwt.wakeup_later i (Result.ok res)
+			| Failed -> Lwt.wakeup_later i (Result.error "failed")
+			| Disconnected -> Lwt.wakeup_later i (Result.error "disconnected")
+			| Closed -> Lwt.wakeup_later i (Result.error "closed")) 
+		(states res) |> ignore;
+        o
 end
 
 

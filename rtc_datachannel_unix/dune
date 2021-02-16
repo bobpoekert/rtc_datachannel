@@ -1,4 +1,19 @@
 (library
     (name rtc_datachannel_unix)
+    (data_only_dirs libdatachannel)
+    (foreign_stubs (language c) (names datachannel_stubs.c) (include_dirs libdatachannel/include)
+    (foreign_archives libdatachannel.a libsrtp2.a libusrsctp.a libjuice.a)
     (libraries lwt rtc_datachannel_generic)
     (implements rtc_datachannel))
+
+(rule
+    (deps (source_tree libdatachannel))
+    (targets libdatachannel.a)
+    (action
+    (no-infer
+        (progn
+            (run ./build_libdatachannel.sh)
+            (copy libdatachannel/libdatachannel.a libdatachannel.a)
+            (copy libdatachannel/libsrtp2.a libsrtp2.a)
+            (copy libdatachannel/libusrsctp.a libusrsctp.a)
+            (copy libdatachannel/libdjuice.a libjuice.a)))))
