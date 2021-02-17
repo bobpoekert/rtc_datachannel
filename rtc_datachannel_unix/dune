@@ -1,7 +1,8 @@
+(data_only_dirs libdatachannel)
+
 (library
     (name rtc_datachannel_unix)
-    (data_only_dirs libdatachannel)
-    (foreign_stubs (language c) (names datachannel_stubs.c) (include_dirs libdatachannel/include)
+    (foreign_stubs (language c) (names datachannel_stubs) (include_dirs libdatachannel/include))
     (foreign_archives libdatachannel.a libsrtp2.a libusrsctp.a libjuice.a)
     (libraries lwt rtc_datachannel_generic)
     (implements rtc_datachannel))

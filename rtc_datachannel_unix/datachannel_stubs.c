@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#include <rtc/rtc.h>
+#include "rtc/rtc.h"
 
 /* PeerConnection */
 
@@ -22,14 +22,14 @@ void ortc_peer_connection_state_callback(int pc, rtcState state, void *ptr) {
 
 }
 
-void ortc_peer_connection_gathering_state_callback(int pc, rtcState state, void *ptr) {
+void ortc_peer_connection_gathering_state_callback(int pc, rtcGatheringState state, void *ptr) {
 
     caml_callback(*caml_named_value("ortc_peer_connection_gathering_state_callback"), 
             Val_int(pc));
 
 }
 
-void ortc_peer_connection_signaling_state_callback(int pc, rtcState state, void *ptr) {
+void ortc_peer_connection_signaling_state_callback(int pc, rtcSignalingState state, void *ptr) {
 
     caml_callback(*caml_named_value("ortc_peer_connection_signaling_state_callback"), 
             Val_int(pc));
@@ -56,36 +56,36 @@ void ortc_peer_connection_close_callback(int pc, void *ptr) {
 }
 
 void ortc_peer_connection_local_description_callback(
-        int pc, const char *sdp, const char *type, void *pc) {
+        int pc, const char *sdp, const char *type, void *ptr) {
 
-    caml_callback2(*caml_named_value("ortc_peer_connection_local_description_callback"),
+    caml_callback3(*caml_named_value("ortc_peer_connection_local_description_callback"),
             Val_int(pc), caml_copy_string(sdp), caml_copy_string(type));
 }
 
 void ortc_peer_connection_local_candidate_callback(
-        int pc, const char *cand, const char *mid, void *pc) {
+        int pc, const char *cand, const char *mid, void *ptr) {
 
-    caml_callback2(*caml_named_value("ortc_peer_connection_local_candidate_callback"),
+    caml_callback3(*caml_named_value("ortc_peer_connection_local_candidate_callback"),
             Val_int(pc), caml_copy_string(cand), caml_copy_string(mid));
 }
 
 CAMLprim value ortc_peer_connection_create(
         value ice_servers,
         value enable_ice_tcp,
-        value port_range_begin
+        value port_range_begin,
         value port_range_end) {
+
+    CAMLparam4(ice_servers, enable_ice_tcp, port_range_begin, port_range_end);
 
     size_t ice_server_count = Wosize_val(ice_servers) / sizeof(void *);
     size_t total_strings_size = 0;
-    char **ice_strings = malloc(ice_server_count * sizeof(char *));
+    const char **ice_strings = malloc(ice_server_count * sizeof(char *));
 
     if (!ice_strings) caml_failwith("out of memory");
 
     for (size_t i=0; i < ice_server_count; i++) {
         value v = Field(ice_servers, i);
         size_t size = caml_string_length(v);
-
-        total_string_size += size;
 
         ice_strings[i] = String_val(v);
     }
@@ -111,14 +111,14 @@ CAMLprim value ortc_peer_connection_create(
             ortc_peer_connection_gathering_state_callback);
     rtcSetSignalingStateChangeCallback(fd, 
             ortc_peer_connection_signaling_state_callback);
-    rtcSetSignalingOpenCallback(fd, 
+    rtcSetOpenCallback(fd, 
             ortc_peer_connection_open_callback);
-    rtcSetSignalingCloseCallback(fd, 
+    rtcSetClosedCallback(fd, 
             ortc_peer_connection_close_callback);
     rtcSetLocalDescriptionCallback(fd,
-            ortc_local_description_callback);
+            ortc_peer_connection_local_description_callback);
     rtcSetLocalCandidateCallback(fd,
-            ortc_local_candidate_callback);
+            ortc_peer_connection_local_candidate_callback);
 
     free(ice_strings);
 
@@ -128,6 +128,8 @@ CAMLprim value ortc_peer_connection_create(
 
 CAMLprim value ortc_peer_connection_set_local_description(
         value pc, value type) {
+
+    CAMLparam2(pc, type);
 
     int _pc = Int_val(pc);
     const char *_type = String_val(type);
@@ -140,6 +142,7 @@ CAMLprim value ortc_peer_connection_set_local_description(
 
 #define STRING_GETTER(src, target) \
     CAMLprim value target(value pc) {\
+        CAMLparam1(pc);\
         int _pc = Int_val(pc);\
         size_t size = 40960;\
         char *buf = NULL; \
@@ -151,15 +154,15 @@ CAMLprim value ortc_peer_connection_set_local_description(
                 caml_failwith("out of memory");\
                 break;\
             }\
-            res_size = src(_pc, size);\
+            res_size = src(_pc, buf, size);\
             if (res_size == RTC_ERR_TOO_SMALL) {\
                 free(buf);\
                 size *= 2;\
                 continue;\
             } else {\
-                v_res = caml_alloc_string(res);\
+                v_res = caml_alloc_string(res_size);\
                 char *c_res = String_val(v_res);\
-                memcpy(c_res, v_res, res_size);\
+                memcpy(c_res, buf, res_size);\
                 break;\
             }\
         }\
@@ -184,6 +187,8 @@ STRING_GETTER(rtcGetRemoteAddress,
 CAMLprim value ortc_peer_connection_set_remote_description(
         value pc, value sdp, value type) {
 
+    CAMLparam3(pc, sdp, type);
+
     int _pc = Int_val(pc);
     char *_sdp = String_val(sdp);
     char *_type = String_val(type);
@@ -197,6 +202,8 @@ CAMLprim value ortc_peer_connection_set_remote_description(
 CAMLprim value ortc_peer_connection_add_remote_candidate(
         value pc, value cand, value mid) {
 
+    CAMLparam3(pc, cand, mid);
+
     int _pc = Int_val(pc);
     char *_cand = String_val(cand);
     char *_mid = String_val(mid);
@@ -208,6 +215,8 @@ CAMLprim value ortc_peer_connection_add_remote_candidate(
 }
 
 CAMLprim value ortc_peer_connection_close(value fd) {
+    CAMLparam1(fd);
+
     int _fd = Int_val(fd);
 
     int res = rtcDeletePeerConnection(_fd);
@@ -247,7 +256,7 @@ void ortc_data_channel_close_callback(int fd, void *p) {
 
 }
 
-void ortc_data_channel_buffered_amount_low_callback(int fd) {
+void ortc_data_channel_buffered_amount_low_callback(int fd, void *p) {
     caml_callback(*caml_named_value("ortc_data_channel_buffered_amount_callback"), 
             Val_int(fd));
 }
@@ -255,6 +264,8 @@ void ortc_data_channel_buffered_amount_low_callback(int fd) {
 
 CAMLprim value ortc_data_channel_create(
         value pc, value name) {
+
+    CAMLparam2(pc, name);
 
     int _pc = Int_val(pc);
     char *_name = String_val(name);
@@ -264,7 +275,7 @@ CAMLprim value ortc_data_channel_create(
     rtcSetMessageCallback(res, ortc_data_channel_message_callback);
     rtcSetErrorCallback(res, ortc_data_channel_error_callback);
     rtcSetOpenCallback(res, ortc_data_channel_open_callback);
-    rtcSetClosedCallback(res, ortc_data_channel_closed_callback);
+    rtcSetClosedCallback(res, ortc_data_channel_close_callback);
     rtcSetBufferedAmountLowCallback(res, ortc_data_channel_buffered_amount_low_callback);
 
 
@@ -273,7 +284,9 @@ CAMLprim value ortc_data_channel_create(
 }
 
 CAMLprim value ortc_data_channel_close(value fd) {
-    
+   
+    CAMLparam1(fd);
+
     int _fd = Int_val(fd);
 
     int res = rtcDeleteDataChannel(_fd);
@@ -283,6 +296,8 @@ CAMLprim value ortc_data_channel_close(value fd) {
 }
 
 CAMLprim value ortc_send_message(value fd, value message) {
+    CAMLparam2(fd, message);
+
     int _fd = Int_val(fd);
     char *_message = String_val(message);
     int message_size = caml_string_length(message);
@@ -294,6 +309,8 @@ CAMLprim value ortc_send_message(value fd, value message) {
 }
 
 CAMLprim value ortc_get_buffered_amount(value fd) {
+    CAMLparam1(fd);
+
     int _fd = Int_val(fd);
 
     int res = rtcGetBufferedAmount(_fd);
@@ -304,6 +321,8 @@ CAMLprim value ortc_get_buffered_amount(value fd) {
 
 CAMLprim value ortc_set_buffered_amount_low_threshold(
         value fd, value thresh) {
+
+    CAMLparam2(fd, thresh);
 
     int _fd = Int_val(fd);
     int _thresh = Int_val(thresh);
@@ -345,12 +364,14 @@ void ortc_websocket_close_callback(int fd, void *p) {
 
 }
 
-void ortc_websocket_buffered_amount_low_callback(int fd) {
+void ortc_websocket_buffered_amount_low_callback(int fd, void *p) {
     caml_callback(*caml_named_value("ortc_websocket_buffered_amount_callback"), 
             Int_val(fd));
 }
 
 CAMLprim value ortc_websocket_create(value url) {
+    CAMLparam1(url);
+
     char *_url = String_val(url);
 
     int res = rtcCreateWebSocket(_url);
@@ -358,7 +379,7 @@ CAMLprim value ortc_websocket_create(value url) {
     rtcSetMessageCallback(res, ortc_websocket_message_callback);
     rtcSetErrorCallback(res, ortc_websocket_error_callback);
     rtcSetOpenCallback(res, ortc_websocket_open_callback);
-    rtcSetClosedCallback(res, ortc_websocket_closed_callback);
+    rtcSetClosedCallback(res, ortc_websocket_close_callback);
     rtcSetBufferedAmountLowCallback(res, ortc_websocket_buffered_amount_low_callback);
 
     CAMLreturn(Val_int(res));
@@ -366,9 +387,11 @@ CAMLprim value ortc_websocket_create(value url) {
 }
 
 CAMLprim value ortc_websocket_close(value handle) {
+    CAMLparam1(handle);
+
     int _handle = Int_val(handle);
 
-    int res = rtcDeleteWebSocket(_handle);
+    int res = rtcDeleteWebsocket(_handle);
 
     CAMLreturn(Val_int(res));
 

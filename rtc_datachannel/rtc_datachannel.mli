@@ -39,6 +39,7 @@ module DataChannel : sig
     val close : t -> unit
 
     val await_close : t -> unit Lwt.t
+    val await_open : t -> unit Lwt.t
 
 end
 
@@ -48,12 +49,14 @@ module WebSocket : sig
 
     val create : string -> (t, string) Result.result Lwt.t
 
-    val send : t -> bytes -> unit
+    val send : t -> bytes -> unit Lwt.t
 
     val source : t -> (bytes, string) Result.result Lwt_stream.t
 
     val close : t -> unit
 
-    val on_close : t -> (t -> unit) -> unit
+    val await_close : t -> unit Lwt.t
+    val await_open : t -> unit Lwt.t
+
 
 end
