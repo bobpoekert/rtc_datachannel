@@ -1,8 +1,5 @@
 #!/bin/bash
 
-cd libdatachannel
+cd ../../../rtc_datachannel_unix/libdatachannel
 
-cmake -B build -DUSE_GNUTLS=0 -DUSE_NICE=0 -DNO_MEDIA=1
-
-cd build
-make libdatachannel.a -j2
+make -j2 libdatachannel.a USE_GNUTLS=0 USE_NICE=0 RTC_ENABLE_MEDIA=0

@@ -3,13 +3,13 @@
 (library
     (name rtc_datachannel_unix)
     (foreign_stubs (language c) (names datachannel_stubs) (include_dirs libdatachannel/include))
-    (foreign_archives libdatachannel.a libsrtp2.a libusrsctp.a libjuice.a)
+    (foreign_archives datachannel srtp2 usrsctp juice)
     (libraries lwt rtc_datachannel_generic)
     (implements rtc_datachannel))
 
 (rule
     (deps (source_tree libdatachannel))
-    (targets libdatachannel.a)
+    (targets libdatachannel.a libsrtp2.a libusrsctp.a libjuice.a)
     (action
     (no-infer
         (progn
@@ -17,4 +17,4 @@
             (copy libdatachannel/libdatachannel.a libdatachannel.a)
             (copy libdatachannel/libsrtp2.a libsrtp2.a)
             (copy libdatachannel/libusrsctp.a libusrsctp.a)
-            (copy libdatachannel/libdjuice.a libjuice.a)))))
+            (copy libdatachannel/libjuice.a libjuice.a)))))
