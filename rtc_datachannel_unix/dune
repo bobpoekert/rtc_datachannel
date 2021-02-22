@@ -4,7 +4,7 @@
     (name rtc_datachannel_unix)
     (foreign_stubs (language c) (names datachannel_stubs) (include_dirs libdatachannel/include))
     (foreign_archives datachannel srtp2 usrsctp juice)
-    (libraries lwt rtc_datachannel_generic)
+    (libraries lwt rtc_datachannel_generic tube)
     (implements rtc_datachannel))
 
 (rule

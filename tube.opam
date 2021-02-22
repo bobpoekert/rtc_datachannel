@@ -1,0 +1,15 @@
+opam-version: "2.0"
+name: "tube"
+license: "MIT"
+synopsis: "Lazy sequences of Lwt.t's"
+description: "Lazy sequences of Lwt.t's"
+
+depends: [
+	"ocaml" {>= "4.5.0"}
+	"dune" {>= "1.11"}
+	"lwt"
+]
+
+build: [
+  ["dune" "build" "-p" name "-j" jobs]
+]

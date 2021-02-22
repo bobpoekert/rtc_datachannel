@@ -1,3 +1,4 @@
 (library
     (public_name rtc_datachannel_generic)
+    (libraries lwt tube)
     (name rtc_datachannel_generic))
